@@ -94,10 +94,48 @@ module.exports = {
       res.status(500).json(err);
     }
   },
-  
-  async addFriend(req, res) {
+
+async addFriend(req, res) {
     try {
-      const user = await User
+      const userId = req.params.userId;
+      const friendId = req.body.friendId;
+
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: userId, friends: { $ne: friendId } },
+        { $push: { friends: friendId } },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'No user with this ID or friend already in the friends list!' });
+      }
+
+      res.json({ message: 'Friend successfully added!', updatedUser });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json(err);
+    }
+  },
+
+  async deleteFriend(req, res) {
+    try {
+      const userId = req.params.userId;
+      const friendId = req.body.friendId;
+
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: userId, friends: { $ne: friendId } },
+        { $push: { friends: friendId } },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'No user with this ID or friend already in the friends list!' });
+      }
+
+      res.json({ message: 'Friend successfully added!', updatedUser });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json(err);
     }
   }
 };
