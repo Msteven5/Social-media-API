@@ -1,49 +1,85 @@
-const { Tags, Post } = require('../models');
+const { Thought, User } = require('../models');
 
 module.exports = {
-  async getTags(req, res) {
+  async getThoughts(req, res) {
     try {
-      const tags = await Tags.find({})
+      const thoughts = await Thought.find({})
         .select('-__v');
-      res.json(tags);
+      res.json(thoughts);
     } catch (err) {
       res.status(500).json(err);
     }
   },
-  async getSingleTag(req, res) {
+  async getSingleThought(req, res) {
     try {
-      const tag = await Tags.findOne({ _id: req.params.tagId })
+      const thought = await Thought.findOne({ _id: req.params.thoughtId })
         .select('-__v');
 
-      if (!tag) {
-        return res.status(404).json({ message: 'No tag with that ID' });
+      if (!thought) {
+        return res.status(404).json({ message: 'No thought with that ID' });
       }
 
-      res.json(tag);
+      res.json(thought);
     } catch (err) {
       res.status(500).json(err);
     }
   },
-  // create a new tag
-  async createTag(req, res) {
+  // create a new thought
+  async createThought(req, res) {
     try {
-      const tag = await Tags.create(req.body);
-      const post = await Post.findOneAndUpdate(
-        { _id: req.body.postId },
-        { $addToSet: { tags: tag._id } },
+      const thought = await Thought.create(req.body);
+
+      const user = await User.findOneAndUpdate(
+        { _id: req.body.userId },
+        { $addToSet: { thoughts: thought._id } },
         { new: true }
       );
 
-      if (!post) {
+      if (!user) {
         return res
           .status(404)
-          .json({ message: 'Tag created, but found no post with that ID' });
+          .json({ message: 'Thought created, but found no User with that ID' });
       }
 
-      res.json('Created the tag 🎉');
+      res.json('Created the thought 🎉');
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
     }
   },
+  async updateThought(req, res) {
+    try {
+      const updatedThought = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $set: req.body },
+      );
+
+      if (!updatedThought) {
+        return res.status(404).json({ message: 'No thoughts with this id!' });
+      }
+
+      res.json(updatedThought);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json(err);
+    }
+  },
+
+  // Deletes a User from the database. Looks for a User by ID.
+  // Then if the user exists, we look for any friends associated with the user based on the user ID and update the friends array for the User.
+  async deleteThoughts(req, res) {
+    try {
+      const deletedThought = await Thought.findOneAndRemove({ _id: req.params.thoughtId });
+
+      if (!deletedThought) {
+        return res.status(404).json({
+          message: 'No thoughts found with this ID!',
+        });
+      }
+
+      res.json({ message: 'Thought successfully deleted!' });
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
 };
