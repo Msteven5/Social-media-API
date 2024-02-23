@@ -8,6 +8,7 @@ const thoughtSchema = new Schema(
       required: true,
     },
     createdAt: {
+      // get: value => new Date
       type: Date,
       default: Date.now,
     },
@@ -20,6 +21,7 @@ const thoughtSchema = new Schema(
   {
     toJSON: {
       virtuals: true,
+      getters: true
     },
   }
 );

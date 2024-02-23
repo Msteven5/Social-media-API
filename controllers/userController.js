@@ -4,8 +4,10 @@ module.exports = {
   async getUsers(req, res) {
     try {
       const users = await User.find()
-        .populate({ path: 'thoughts', select: '-__v' },
-          { path: 'friends', select: '-__v' })
+      .populate([
+        { path: 'thoughts', select: '-__v' },
+        { path: 'friends', select: '-__v' }
+      ]);
 
 
       res.json(users);
@@ -18,8 +20,10 @@ module.exports = {
   async getSingleUser(req, res) {
     try {
       const user = await User.findOne({ _id: req.params.userId })
-        .populate({ path: 'thoughts', select: '-__v' },
-          { path: 'friends', select: '-__v' })
+      .populate([
+        { path: 'thoughts', select: '-__v' },
+        { path: 'friends', select: '-__v' }
+      ]);
 
       if (!user) {
         return res.status(404).json({ message: 'No user with that ID' });
@@ -75,7 +79,7 @@ module.exports = {
         { $pull: { friends: req.params.userId } },
       );
 
-      const deletedThoughts = await Thought.deleteMany({ userId: req.params.userId });
+      const deletedThoughts = await Thought.deleteMany({ username: req.body.username });
 
       if (!updatedUser) {
         return res.status(404).json({
@@ -98,12 +102,11 @@ module.exports = {
 async addFriend(req, res) {
     try {
       const userId = req.params.userId;
-      const friendId = req.body.friendId;
+      const friendId = req.params.friendId;
 
       const updatedUser = await User.findOneAndUpdate(
         { _id: userId, friends: { $ne: friendId } },
-        { $push: { friends: friendId } },
-        { new: true }
+        { $push: { friends: friendId } }
       );
 
       if (!updatedUser) {
@@ -120,19 +123,18 @@ async addFriend(req, res) {
   async deleteFriend(req, res) {
     try {
       const userId = req.params.userId;
-      const friendId = req.body.friendId;
+      const friendId = req.params.friendId;
 
       const updatedUser = await User.findOneAndUpdate(
-        { _id: userId, friends: { $ne: friendId } },
-        { $push: { friends: friendId } },
-        { new: true }
+        { _id: userId, friends: friendId },
+        { $pull: { friends: friendId } }
       );
 
       if (!updatedUser) {
-        return res.status(404).json({ message: 'No user with this ID or friend already in the friends list!' });
+        return res.status(404).json({ message: 'No user with this ID or friend already removed!' });
       }
 
-      res.json({ message: 'Friend successfully added!', updatedUser });
+      res.json({ message: 'Friend successfully deleted!', updatedUser });
     } catch (err) {
       console.error(err);
       res.status(500).json(err);
